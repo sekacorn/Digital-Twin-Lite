@@ -9,6 +9,8 @@ build/
 venv/
 .venv/
 *.db
+*.db-shm
+*.db-wal
 
 # Pytest
 .pytest_cache/

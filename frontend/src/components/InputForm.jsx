@@ -22,6 +22,12 @@ const labelStyle = {
   fontFamily: "'Rajdhani', sans-serif",
 };
 
+const helperStyle = {
+  fontSize: "0.62rem",
+  color: "var(--text-dim)",
+  lineHeight: 1.25,
+};
+
 const fieldStyle = {
   display: "flex",
   flexDirection: "column",
@@ -36,6 +42,7 @@ function clampNumber(val, min, max, fallback) {
 
 export default function InputForm({ onSubmit, loading }) {
   const [calories, setCalories] = useState(2000);
+  const [maintenanceCalories, setMaintenanceCalories] = useState(2000);
   const [sleepHours, setSleepHours] = useState(7);
   const [exerciseMinutes, setExerciseMinutes] = useState(30);
   const [waterLiters, setWaterLiters] = useState(2.5);
@@ -47,6 +54,7 @@ export default function InputForm({ onSubmit, loading }) {
     e.preventDefault();
     const data = {
       calories: clampNumber(calories, 100, 10000, 2000),
+      maintenance_calories: clampNumber(maintenanceCalories, 800, 6000, 2000),
       sleep_hours: clampNumber(sleepHours, 0, 24, 7),
       exercise_minutes: clampNumber(exerciseMinutes, 0, 1440, 30),
       water_liters: clampNumber(waterLiters, 0, 20, 2.5),
@@ -59,8 +67,13 @@ export default function InputForm({ onSubmit, loading }) {
     <HudPanel title="Habit Input" accentColor="var(--accent-cyan)">
       <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
         <div style={fieldStyle}>
-          <label htmlFor={`${formId}-cal`} style={labelStyle}>Calories (kcal)</label>
+          <label htmlFor={`${formId}-cal`} style={labelStyle}>Calories Eaten</label>
           <input id={`${formId}-cal`} type="number" style={inputStyle} value={calories} onChange={(e) => setCalories(Number(e.target.value))} min={100} max={10000} />
+        </div>
+        <div style={fieldStyle}>
+          <label htmlFor={`${formId}-maintenance`} style={labelStyle}>Maintenance Calories</label>
+          <input id={`${formId}-maintenance`} type="number" style={inputStyle} value={maintenanceCalories} onChange={(e) => setMaintenanceCalories(Number(e.target.value))} min={800} max={6000} />
+          <div style={helperStyle}>Calories needed to maintain weight before logged exercise.</div>
         </div>
         <div style={fieldStyle}>
           <label htmlFor={`${formId}-sleep`} style={labelStyle}>Sleep (hours)</label>
@@ -82,8 +95,11 @@ export default function InputForm({ onSubmit, loading }) {
           <label htmlFor={`${formId}-period`} style={labelStyle}>Period</label>
           <select id={`${formId}-period`} style={inputStyle} value={periodDays} onChange={(e) => setPeriodDays(Number(e.target.value))}>
             <option value={7}>7 DAYS</option>
+            <option value={14}>14 DAYS</option>
             <option value={30}>30 DAYS</option>
             <option value={90}>90 DAYS</option>
+            <option value={120}>120 DAYS</option>
+            <option value={180}>180 DAYS</option>
           </select>
         </div>
         <div style={{ gridColumn: "1 / -1", marginTop: "0.25rem" }}>

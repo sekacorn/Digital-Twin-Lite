@@ -4,6 +4,7 @@
 
 ### Inputs (Manual Entry)
 - Calories consumed (kcal/day)
+- Maintenance calories (kcal/day)
 - Sleep duration (hours/night)
 - Exercise duration (minutes/day)
 - Water intake (liters/day)
@@ -14,8 +15,11 @@
 
 ### Simulation Periods
 - 7-day projection
+- 14-day projection
 - 30-day projection
 - 90-day projection
+- 120-day projection
+- 180-day projection
 
 ### Core Features
 1. Input form for daily habits

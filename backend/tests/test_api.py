@@ -17,6 +17,7 @@ def reset_db():
 
 VALID_INPUT = {
     "calories": 2000,
+    "maintenance_calories": 2000,
     "sleep_hours": 7,
     "exercise_minutes": 30,
     "water_liters": 2.5,
@@ -45,6 +46,16 @@ def test_create_input():
     assert "id" in data
     assert data["message"] == "Input recorded"
 
+def test_create_input_defaults_maintenance_calories():
+    payload = {key: value for key, value in VALID_INPUT.items() if key != "maintenance_calories"}
+    res = client.post("/api/input", json=payload)
+    assert res.status_code == 201
+
+def test_create_input_invalid_maintenance_calories():
+    bad = {**VALID_INPUT, "maintenance_calories": 700}
+    res = client.post("/api/input", json=bad)
+    assert res.status_code == 422
+
 def test_create_input_invalid_calories():
     bad = {**VALID_INPUT, "calories": -100}
     res = client.post("/api/input", json=bad)
@@ -67,6 +78,18 @@ def test_simulate():
     assert len(data["results"]) == 30
     assert "summary" in data
     assert "final_weight" in data["summary"]
+    assert data["explanation"]["maintenance_calories"] == 2000
+    assert data["explanation"]["intake_calories"] == 2000
+    assert "maintenance" in data["explanation"]["insight"].lower()
+
+def test_simulate_uses_maintenance_calories():
+    custom = {**VALID_INPUT, "calories": 2200, "maintenance_calories": 2500, "exercise_minutes": 0}
+    inp = client.post("/api/input", json=custom).json()
+    res = client.post("/api/simulate", json={"input_id": inp["id"], "period_days": 7})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["summary"]["weight_change"] < 0
+    assert data["explanation"]["daily_calorie_balance"] == -300
 
 def test_simulate_invalid_period():
     inp = client.post("/api/input", json=VALID_INPUT).json()
@@ -76,6 +99,51 @@ def test_simulate_invalid_period():
 def test_simulate_missing_input():
     res = client.post("/api/simulate", json={"input_id": 9999, "period_days": 30})
     assert res.status_code == 404
+
+
+# --- POST /api/scenarios/compare ---
+
+def test_compare_scenarios():
+    res = client.post("/api/scenarios/compare", json={
+        "period_days": 30,
+        "scenarios": [
+            {"label": "Current", "habits": VALID_INPUT},
+            {"label": "More Exercise", "habits": {**VALID_INPUT, "exercise_minutes": 60}},
+            {"label": "Lower Calories", "habits": {**VALID_INPUT, "calories": 1800}},
+        ],
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data["period_days"] == 30
+    assert len(data["scenarios"]) == 3
+    assert data["scenarios"][0]["label"] == "Current"
+    assert len(data["scenarios"][0]["results"]) == 30
+    assert "strongest average energy" in data["insight"]
+
+
+def test_compare_scenarios_can_vary_maintenance_calories():
+    res = client.post("/api/scenarios/compare", json={
+        "period_days": 7,
+        "scenarios": [
+            {"label": "Lower Maintenance", "habits": {**VALID_INPUT, "maintenance_calories": 1800}},
+            {"label": "Higher Maintenance", "habits": {**VALID_INPUT, "maintenance_calories": 2400}},
+        ],
+    })
+    assert res.status_code == 200
+    data = res.json()
+    lower, higher = data["scenarios"]
+    assert lower["explanation"]["maintenance_calories"] == 1800
+    assert higher["summary"]["weight_change"] < lower["summary"]["weight_change"]
+
+
+def test_compare_scenarios_requires_two_scenarios():
+    res = client.post("/api/scenarios/compare", json={
+        "period_days": 30,
+        "scenarios": [
+            {"label": "Current", "habits": VALID_INPUT},
+        ],
+    })
+    assert res.status_code == 422
 
 
 # --- GET /api/results ---
@@ -97,7 +165,7 @@ def test_get_results_not_found():
 
 def test_all_simulation_periods():
     inp = client.post("/api/input", json=VALID_INPUT).json()
-    for period in (7, 30, 90):
+    for period in (7, 14, 30, 90, 120, 180):
         res = client.post("/api/simulate", json={"input_id": inp["id"], "period_days": period})
         assert res.status_code == 200
         assert len(res.json()["results"]) == period

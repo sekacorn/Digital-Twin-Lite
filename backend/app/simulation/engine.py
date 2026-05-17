@@ -2,13 +2,13 @@
 Digital Twin Lite - Simulation Engine
 
 Rule-based prediction engine for weight and energy trends.
-All rules are deterministic and explainable — no ML.
+All rules are deterministic and explainable - no ML.
 """
 
 from dataclasses import dataclass
 
-# Baseline metabolic rate assumption (kcal/day) for an average adult
-BASELINE_CALORIES = 2000
+# Default maintenance calorie estimate (kcal/day) for an average adult
+DEFAULT_MAINTENANCE_CALORIES = 2000
 # Calories per kg of body weight (simplified)
 CALORIES_PER_KG = 7700
 # Exercise calories burned per minute (moderate intensity average)
@@ -22,6 +22,7 @@ class HabitInput:
     exercise_minutes: float
     water_liters: float
     current_weight: float
+    maintenance_calories: float = DEFAULT_MAINTENANCE_CALORIES
 
 
 @dataclass
@@ -34,12 +35,36 @@ class DayPrediction:
 def calculate_daily_calorie_balance(habits: HabitInput) -> float:
     """Net calories = intake - baseline expenditure - exercise burn."""
     exercise_burn = habits.exercise_minutes * EXERCISE_KCAL_PER_MIN
-    return habits.calories - BASELINE_CALORIES - exercise_burn
+    return habits.calories - habits.maintenance_calories - exercise_burn
 
 
 def calculate_weight_change_kg(calorie_balance: float) -> float:
     """Convert daily calorie surplus/deficit to kg change."""
     return calorie_balance / CALORIES_PER_KG
+
+
+def calculate_energy_factors(habits: HabitInput, day: int) -> dict[str, float]:
+    """Return the individual factors that make up the energy score."""
+    if habits.sleep_hours >= 7:
+        sleep_bonus = min((habits.sleep_hours - 7) * 8, 16)
+    else:
+        sleep_bonus = (habits.sleep_hours - 7) * 5
+
+    if habits.water_liters >= 2.0:
+        water_bonus = min((habits.water_liters - 2.0) * 5, 10)
+    else:
+        water_bonus = (habits.water_liters - 2.0) * 8
+
+    exercise_bonus = min(habits.exercise_minutes * 0.15, 10)
+    consistency_bonus = min(day * 0.1, 5)
+
+    return {
+        "baseline": 50.0,
+        "sleep": round(sleep_bonus, 1),
+        "hydration": round(water_bonus, 1),
+        "exercise": round(exercise_bonus, 1),
+        "consistency": round(consistency_bonus, 1),
+    }
 
 
 def calculate_energy_score(habits: HabitInput, day: int) -> float:
@@ -50,29 +75,36 @@ def calculate_energy_score(habits: HabitInput, day: int) -> float:
     - Exercise: moderate boost
     - Consistency bonus over time (simulated by day ramp)
     """
-    score = 50.0  # baseline
-
-    # Sleep factor: 7-9h is optimal, smooth curve
-    if habits.sleep_hours >= 7:
-        sleep_bonus = min((habits.sleep_hours - 7) * 8, 16)  # 7h=0, 8h=+8, 9h=+16 cap
-    else:
-        sleep_bonus = (habits.sleep_hours - 7) * 5  # 6h=-5, 5h=-10, 4h=-15
-
-    # Hydration factor: 2-3L is optimal, smooth curve
-    if habits.water_liters >= 2.0:
-        water_bonus = min((habits.water_liters - 2.0) * 5, 10)  # 2L=0, 3L=+5, 4L=+10 cap
-    else:
-        water_bonus = (habits.water_liters - 2.0) * 8  # 1.5L=-4, 1L=-8, 0.5L=-12
-
-    # Exercise factor: moderate exercise boosts energy
-    exercise_bonus = min(habits.exercise_minutes * 0.15, 10)
-
-    # Consistency ramp: habits compound over time (small daily gain, caps at +5)
-    consistency_bonus = min(day * 0.1, 5)
-
-    score += sleep_bonus + water_bonus + exercise_bonus + consistency_bonus
-
+    score = sum(calculate_energy_factors(habits, day).values())
     return round(max(0, min(100, score)), 1)
+
+
+def build_model_explanation(habits: HabitInput, period_days: int) -> dict:
+    """Explain the assumptions and drivers used for a simulation."""
+    calorie_balance = calculate_daily_calorie_balance(habits)
+    daily_weight_delta = calculate_weight_change_kg(calorie_balance)
+    exercise_burn = habits.exercise_minutes * EXERCISE_KCAL_PER_MIN
+    energy_factors = calculate_energy_factors(habits, min(period_days, 30))
+
+    if calorie_balance < 0:
+        insight = "Estimated intake is below maintenance after exercise, so weight trends downward."
+    elif calorie_balance > 0:
+        insight = "Estimated intake is above maintenance after exercise, so weight trends upward."
+    else:
+        insight = "Estimated intake is close to maintenance after exercise, so weight stays near baseline."
+
+    return {
+        "maintenance_calories": habits.maintenance_calories,
+        "intake_calories": habits.calories,
+        "exercise_kcal_per_min": EXERCISE_KCAL_PER_MIN,
+        "calories_per_kg": CALORIES_PER_KG,
+        "daily_calorie_balance": round(calorie_balance, 1),
+        "estimated_exercise_burn": round(exercise_burn, 1),
+        "daily_weight_delta": round(daily_weight_delta, 4),
+        "energy_factors": energy_factors,
+        "insight": insight,
+        "limitations": "Directional wellness projection only; not medical advice or a clinical prediction.",
+    }
 
 
 def run_simulation(habits: HabitInput, period_days: int) -> list[DayPrediction]:

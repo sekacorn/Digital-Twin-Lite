@@ -45,6 +45,14 @@ export async function runSimulation(inputId, periodDays) {
   });
 }
 
+export async function compareScenarios(periodDays, scenarios) {
+  return request(`${BASE}/scenarios/compare`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ period_days: periodDays, scenarios }),
+  });
+}
+
 export async function getResults(simulationId) {
   return request(`${BASE}/results/${simulationId}`);
 }

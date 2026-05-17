@@ -13,7 +13,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-MVP-00f0ff?style=flat-square" alt="Status" />
   <img src="https://img.shields.io/badge/engine-rule--based-00ff88?style=flat-square" alt="Engine" />
-  <img src="https://img.shields.io/badge/tests-21%20passed-00ff88?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-25%20passed-00ff88?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License" />
 </p>
 
@@ -53,6 +53,12 @@ A wireframe human body rendered in SVG that physically morphs based on your proj
 ### Time Slider
 A vertical "NOW to Future" slider inspired by digital twin research interfaces. Click or drag to any point in your simulation period and watch the body and every data panel update instantly to show your projected state on that day.
 
+### Scenario Comparison
+Run current habits against alternate paths such as more sleep, more exercise, and lower calories. The dashboard compares final weight, net change, and average energy side by side, then highlights which scenario performs best.
+
+### Model Assumptions
+The app surfaces the assumptions behind each projection, including maintenance calories, exercise burn, weight-change math, daily calorie balance, and energy-score drivers. Results remain directional wellness projections, not medical advice.
+
 ### HUD Dashboard
 A sci-fi command center interface with neon cyan and green accents on a dark background. Glowing corner-traced panels display vital projections, bio metric progress bars, sparkline trend charts, and a simulation summary. Every element uses the Orbitron monospace typeface for a cohesive holographic aesthetic.
 
@@ -70,6 +76,7 @@ Every prediction is deterministic and traceable. No black-box ML. The engine use
 | Habit | Value |
 |-------|-------|
 | Calories | 1,800 kcal/day |
+| Maintenance Calories | 2,200 kcal/day |
 | Sleep | 8 hours/night |
 | Exercise | 45 min/day |
 | Water | 3 liters/day |
@@ -100,7 +107,7 @@ User Habits ──> Simulation Engine ──> Prediction Results ──> HUD Vis
 
 ### Simulation Systems
 
-**Metabolic Balance** — The engine calculates net daily energy balance by comparing caloric intake against baseline metabolic expenditure and exercise burn. Surplus calories accumulate as weight gain; deficits produce weight loss, modeled at the established 7,700 kcal per kilogram ratio.
+**Metabolic Balance** — The engine calculates net daily energy balance by comparing caloric intake against the user's estimated maintenance calories and exercise burn. Surplus calories accumulate as weight gain; deficits produce weight loss, modeled at the established 7,700 kcal per kilogram ratio.
 
 **Recovery & Sleep** — Sleep is the primary driver of the energy score. Optimal sleep (7-9 hours) generates significant energy gains. Below 6 hours, energy degrades noticeably. The system rewards consistency — sustained healthy sleep compounds benefits over time.
 
@@ -137,8 +144,9 @@ The system is fully modular. The simulation engine has zero dependencies on the 
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/input` | Submit daily habit data (calories, sleep, exercise, water, weight) |
+| `POST` | `/api/input` | Submit daily habit data (calories, maintenance calories, sleep, exercise, water, weight) |
 | `POST` | `/api/simulate` | Run a projection for 7, 30, or 90 days against a saved input |
+| `POST` | `/api/scenarios/compare` | Run 2-4 labeled scenarios and compare projected outcomes |
 | `GET` | `/api/results/{id}` | Retrieve full simulation results with day-by-day predictions and summary |
 
 All responses include structured JSON with prediction arrays and computed summaries (final weight, average energy, net weight change).
@@ -271,7 +279,7 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-21 tests covering engine logic, API endpoints, input validation, edge cases, and all simulation periods.
+31 tests covering engine logic, API endpoints, input validation, edge cases, scenario comparison, explanations, and all simulation periods.
 
 ---
 
@@ -328,7 +336,7 @@ digital-twin-lite/
 
 ## Roadmap
 
-- [ ] **Scenario Comparison** — Run multiple simulations side-by-side to compare different habit strategies
+- [x] **Scenario Comparison** - Run multiple simulations side-by-side to compare different habit strategies
 - [ ] **AI-Powered Optimization** — "What should I change to reach 75kg in 60 days?"
 - [ ] **Wearable Integration** — Pull real data from Apple Health, Google Fit, or Fitbit
 - [ ] **Advanced Body Systems** — Expand simulation to include muscle retention, stress, metabolic adaptation

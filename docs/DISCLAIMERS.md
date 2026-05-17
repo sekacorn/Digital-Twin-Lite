@@ -19,3 +19,5 @@ All data entered into this tool is stored locally and is not transmitted to exte
 ## Accuracy Disclaimer
 
 The simulation engine uses simplified models that do not account for individual medical conditions, medications, genetic factors, metabolic variations, or other personal health variables. Actual outcomes will vary significantly from predictions.
+
+Maintenance calorie estimates vary by body size, age, sex, activity level, and metabolism. If a user enters an inaccurate maintenance estimate, projected weight trends will be less representative.

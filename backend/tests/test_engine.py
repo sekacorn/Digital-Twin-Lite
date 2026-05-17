@@ -30,9 +30,17 @@ def test_calorie_balance_surplus():
     assert calculate_daily_calorie_balance(h) > 0
 
 def test_calorie_balance_maintenance():
-    # 2000 cal intake, 0 exercise → net 0
+    # 2000 cal intake, 0 exercise -> net 0 with default maintenance
     h = make_habits(calories=2000, exercise_minutes=0)
     assert calculate_daily_calorie_balance(h) == 0
+
+def test_calorie_balance_uses_maintenance_calories():
+    h = make_habits(calories=2200, maintenance_calories=2500, exercise_minutes=0)
+    assert calculate_daily_calorie_balance(h) == -300
+
+def test_calorie_balance_default_maintenance_is_2000():
+    h = make_habits(calories=2200, exercise_minutes=0)
+    assert calculate_daily_calorie_balance(h) == 200
 
 
 # --- Weight change ---
@@ -77,7 +85,7 @@ def test_energy_bounded():
 
 def test_simulation_length():
     h = make_habits()
-    for period in (7, 30, 90):
+    for period in (7, 14, 30, 90, 120, 180):
         results = run_simulation(h, period)
         assert len(results) == period
 

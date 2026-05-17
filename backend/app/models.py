@@ -11,6 +11,7 @@ class HabitInputRow(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     calories: Mapped[float] = mapped_column(Float, nullable=False)
+    maintenance_calories: Mapped[float] = mapped_column(Float, nullable=False, default=2000)
     sleep_hours: Mapped[float] = mapped_column(Float, nullable=False)
     exercise_minutes: Mapped[float] = mapped_column(Float, nullable=False)
     water_liters: Mapped[float] = mapped_column(Float, nullable=False)

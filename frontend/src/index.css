@@ -81,10 +81,18 @@ h1, h2, h3, h4 {
     grid-template-columns: 1fr !important;
     padding: 0.75rem !important;
   }
+
+  .scenario-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
 }
 
 @media (max-width: 600px) {
   .main-grid {
     gap: 0.5rem !important;
+  }
+
+  .scenario-grid {
+    grid-template-columns: 1fr !important;
   }
 }
