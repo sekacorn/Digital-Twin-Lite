@@ -352,8 +352,3 @@ See [`docs/DISCLAIMERS.md`](docs/DISCLAIMERS.md) for full legal text.
 
 MIT — see [LICENSE](LICENSE).
 
----
-
-<p align="center">
-  <sub>Built with a multi-agent architecture: Orchestrator, Product Spec, Architecture, Legal, Simulation Engine, Backend API, Frontend UX, QA, and README agents.</sub>
-</p>
