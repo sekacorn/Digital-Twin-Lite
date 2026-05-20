@@ -22,4 +22,4 @@ Health-curious individuals who want to visualize how changes in sleep, diet, exe
 
 ## Core Value Proposition
 
-"See your future self" — input your daily habits and get a visual projection of where those habits are likely to take you over 7, 30, or 90 days.
+"See your future self" — input your daily habits and get a visual projection of where those habits are likely to take you from 7 to 180 days.

@@ -136,6 +136,24 @@ def test_compare_scenarios_can_vary_maintenance_calories():
     assert higher["summary"]["weight_change"] < lower["summary"]["weight_change"]
 
 
+def test_compare_scenarios_accepts_custom_fifth_scenario():
+    res = client.post("/api/scenarios/compare", json={
+        "period_days": 14,
+        "scenarios": [
+            {"label": "Current", "habits": VALID_INPUT},
+            {"label": "More Sleep", "habits": {**VALID_INPUT, "sleep_hours": 8}},
+            {"label": "More Exercise", "habits": {**VALID_INPUT, "exercise_minutes": 60}},
+            {"label": "Lower Calories", "habits": {**VALID_INPUT, "calories": 1800}},
+            {"label": "Custom Plan", "habits": {**VALID_INPUT, "calories": 1900, "sleep_hours": 8, "water_liters": 3}},
+        ],
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert len(data["scenarios"]) == 5
+    assert data["scenarios"][-1]["label"] == "Custom Plan"
+    assert len(data["scenarios"][-1]["results"]) == 14
+
+
 def test_compare_scenarios_requires_two_scenarios():
     res = client.post("/api/scenarios/compare", json={
         "period_days": 30,

@@ -13,8 +13,8 @@ function clampScenarioValue(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function buildScenarioInputs(habits) {
-  return [
+function buildScenarioInputs(habits, customScenario) {
+  const scenarios = [
     { label: "Current", habits },
     {
       label: "More Sleep",
@@ -38,6 +38,87 @@ function buildScenarioInputs(habits) {
       },
     },
   ];
+
+  if (customScenario) {
+    scenarios.push(customScenario);
+  }
+
+  return scenarios;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function buildReportHtml(compareData) {
+  const generatedAt = new Date().toLocaleString();
+  const rows = compareData.scenarios.map((scenario) => `
+    <tr>
+      <td>${escapeHtml(scenario.label)}</td>
+      <td>${scenario.summary.final_weight} kg</td>
+      <td>${scenario.summary.weight_change >= 0 ? "+" : ""}${scenario.summary.weight_change} kg</td>
+      <td>${scenario.summary.avg_energy}/100</td>
+      <td>${scenario.explanation.daily_calorie_balance} kcal/day</td>
+    </tr>
+  `).join("");
+  const assumptions = compareData.scenarios.map((scenario) => `
+    <section>
+      <h2>${escapeHtml(scenario.label)}</h2>
+      <ul>
+        <li>Intake: ${scenario.explanation.intake_calories} kcal/day</li>
+        <li>Maintenance: ${scenario.explanation.maintenance_calories} kcal/day</li>
+        <li>Exercise burn estimate: ${scenario.explanation.estimated_exercise_burn} kcal/day</li>
+        <li>Daily calorie balance: ${scenario.explanation.daily_calorie_balance} kcal/day</li>
+        <li>Weight math: ${scenario.explanation.calories_per_kg} kcal/kg</li>
+      </ul>
+      <p>${escapeHtml(scenario.explanation.insight)}</p>
+    </section>
+  `).join("");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Digital Twin Lite Simulation Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #102033; margin: 2rem; line-height: 1.45; }
+    h1, h2 { color: #0b1728; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0 1.5rem; }
+    th, td { border: 1px solid #c7d2df; padding: 0.55rem; text-align: left; }
+    th { background: #edf3f8; }
+    .notice { color: #44566c; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Digital Twin Lite Simulation Report</h1>
+  <p>Generated: ${escapeHtml(generatedAt)}</p>
+  <p>Projection period: ${compareData.period_days} days</p>
+  <p><strong>Comparison insight:</strong> ${escapeHtml(compareData.insight)}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th>Final Weight</th>
+        <th>Net Change</th>
+        <th>Average Energy</th>
+        <th>Daily Balance</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <h2>Model Assumptions</h2>
+  ${assumptions}
+  <h2>Limitations</h2>
+  <p>${escapeHtml(compareData.scenarios[0].explanation.limitations)}</p>
+  <p class="notice">Digital Twin Lite is for educational and wellness purposes only. It does not provide medical advice, clinical validation, or guaranteed outcomes.</p>
+  <p class="notice">Digital Twin Lite attribution: Copyright 2026 Sekacorn. Licensed under Apache-2.0.</p>
+</body>
+</html>`;
 }
 
 export default function App() {
@@ -49,11 +130,11 @@ export default function App() {
   const [currentDay, setCurrentDay] = useState(0);
   const [inputWeight, setInputWeight] = useState(80);
 
-  async function handleSubmit(habits, periodDays) {
+  async function handleSubmit(habits, periodDays, customScenario) {
     setLoading(true);
     setError(null);
     try {
-      const comparison = await compareScenarios(periodDays, buildScenarioInputs(habits));
+      const comparison = await compareScenarios(periodDays, buildScenarioInputs(habits, customScenario));
       setCompareData(comparison);
       setSelectedScenario(0);
       setSimData(comparison.scenarios[0]);
@@ -95,10 +176,22 @@ export default function App() {
     setCurrentDay((day) => Math.max(1, Math.min(day || 1, compareData.period_days)));
   }
 
+  function exportReport() {
+    if (!compareData) return;
+    const reportWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!reportWindow) {
+      setError("Report popup was blocked. Please allow popups and try again.");
+      return;
+    }
+    reportWindow.document.write(buildReportHtml(compareData));
+    reportWindow.document.close();
+  }
+
   return (
     <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Top bar */}
-      <div style={{
+      <header style={{
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -126,10 +219,10 @@ export default function App() {
           &nbsp;&nbsp;|&nbsp;&nbsp;
           v0.1.0
         </div>
-      </div>
+      </header>
 
       {/* Main layout: responsive 3-column on desktop, stacked on mobile */}
-      <div style={{
+      <main id="main-content" style={{
         display: "grid",
         gridTemplateColumns: "280px 1fr 280px",
         gap: "1rem",
@@ -145,7 +238,7 @@ export default function App() {
 
           {error && (
             <HudPanel title="Error" accentColor="var(--accent-red)">
-              <div style={{ color: "#ff3366", fontSize: "0.8rem", fontFamily: "'Rajdhani', sans-serif" }}>
+              <div role="alert" style={{ color: "#ff3366", fontSize: "0.8rem", fontFamily: "'Rajdhani', sans-serif" }}>
                 {error}
               </div>
             </HudPanel>
@@ -221,15 +314,17 @@ export default function App() {
                   : "AWAITING INPUT"}
             </div>
 
-            <HumanBody
-              weightFactor={weightFactor}
-              energyScore={energyScore}
-              isProjection={simData !== null}
-            />
+            <section aria-label="Body projection visualization">
+              <HumanBody
+                weightFactor={weightFactor}
+                energyScore={energyScore}
+                isProjection={simData !== null}
+              />
+            </section>
 
             {/* Bottom status */}
             {simData && dayData && (
-              <div style={{
+              <div role="status" aria-live="polite" style={{
                 display: "flex",
                 gap: "2rem",
                 justifyContent: "center",
@@ -255,12 +350,12 @@ export default function App() {
             )}
 
             {compareData && (
-              <div style={{
+              <div aria-label="Scenario comparison results" style={{
                 width: "100%",
                 maxWidth: 720,
                 marginTop: "1rem",
                 display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
                 gap: "0.5rem",
               }}
                 className="scenario-grid"
@@ -388,7 +483,7 @@ export default function App() {
 
           {compareData && (
             <HudPanel title="Compare Insight" accentColor="var(--accent-green)">
-              <div style={{ color: "var(--text-dim)", fontSize: "0.78rem", lineHeight: 1.55 }}>
+              <div role="status" aria-live="polite" style={{ color: "var(--text-dim)", fontSize: "0.78rem", lineHeight: 1.55 }}>
                 {compareData.insight}
               </div>
               {explanation && (
@@ -401,13 +496,32 @@ export default function App() {
                   {explanation.insight}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={exportReport}
+                style={{
+                  width: "100%",
+                  marginTop: "0.75rem",
+                  padding: "0.5rem",
+                  border: "1px solid rgba(0, 240, 255, 0.35)",
+                  borderRadius: 3,
+                  background: "rgba(0,240,255,0.08)",
+                  color: "var(--accent-cyan)",
+                  fontFamily: "'Orbitron', monospace",
+                  fontSize: "0.68rem",
+                  letterSpacing: "1px",
+                  cursor: "pointer",
+                }}
+              >
+                Export Report
+              </button>
             </HudPanel>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Bottom disclaimer bar */}
-      <div style={{
+      <footer style={{
         textAlign: "center",
         padding: "0.5rem",
         fontSize: "0.6rem",
@@ -416,7 +530,7 @@ export default function App() {
         letterSpacing: "1px",
       }}>
         FOR EDUCATIONAL AND WELLNESS PURPOSES ONLY - NOT MEDICAL ADVICE
-      </div>
+      </footer>
     </div>
   );
 }

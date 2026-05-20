@@ -36,7 +36,7 @@ class CompareScenarioInput(BaseModel):
 
 class CompareRequest(BaseModel):
     period_days: SimulationPeriod = Field(description="Simulation period: 7, 14, 30, 90, 120, or 180 days")
-    scenarios: list[CompareScenarioInput] = Field(min_length=2, max_length=4)
+    scenarios: list[CompareScenarioInput] = Field(min_length=2, max_length=5)
 
 
 class DayResult(BaseModel):

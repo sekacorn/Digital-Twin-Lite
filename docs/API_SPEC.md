@@ -89,6 +89,8 @@ Run multiple labeled scenarios for the same projection period.
 
 Supported `period_days` values: `7`, `14`, `30`, `90`, `120`, and `180`.
 
+The request accepts 2-5 scenarios, which allows the frontend to compare the four preset paths plus one custom scenario.
+
 **Request Body:**
 ```json
 {

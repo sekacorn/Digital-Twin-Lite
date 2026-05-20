@@ -6,6 +6,8 @@
     <a href="#how-it-works">How It Works</a> &nbsp;&bull;&nbsp;
     <a href="#architecture">Architecture</a> &nbsp;&bull;&nbsp;
     <a href="#api">API</a> &nbsp;&bull;&nbsp;
+    <a href="#accessibility">Accessibility</a> &nbsp;&bull;&nbsp;
+    <a href="#audit-readiness">Audit Readiness</a> &nbsp;&bull;&nbsp;
     <a href="#roadmap">Roadmap</a>
   </p>
 </p>
@@ -13,8 +15,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-MVP-00f0ff?style=flat-square" alt="Status" />
   <img src="https://img.shields.io/badge/engine-rule--based-00ff88?style=flat-square" alt="Engine" />
-  <img src="https://img.shields.io/badge/tests-25%20passed-00ff88?style=flat-square" alt="Tests" />
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/tests-32%20backend%20%2B%203%20frontend-00ff88?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square" alt="License" />
 </p>
 
 <p align="center">
@@ -27,7 +29,7 @@
 
 Most health apps track the past. They tell you what you ate, how you slept, what you did yesterday.
 
-**Digital Twin Lite does the opposite.** It takes your current habits and simulates what happens next — projecting your weight and energy trajectory over 7, 30, or 90 days through a holographic body visualization that changes in real time.
+**Digital Twin Lite does the opposite.** It takes your current habits and simulates what happens next, projecting your weight and energy trajectory from 7 to 180 days through a holographic body visualization that changes in real time.
 
 This shifts the user from passive tracking to active decision-making: *"If I keep doing this, where do I end up?"*
 
@@ -55,6 +57,15 @@ A vertical "NOW to Future" slider inspired by digital twin research interfaces. 
 
 ### Scenario Comparison
 Run current habits against alternate paths such as more sleep, more exercise, and lower calories. The dashboard compares final weight, net change, and average energy side by side, then highlights which scenario performs best.
+
+### Custom Scenario
+Add one personalized scenario with custom calories, maintenance calories, sleep, exercise, and hydration values. The custom plan appears beside the preset scenarios for direct comparison.
+
+### Input Cautions
+Unusual inputs are flagged with non-blocking cautions so users can check values before running a projection.
+
+### Exportable Report
+Comparison results can be opened as a clean HTML report with scenario summaries, assumptions, limitations, and attribution. Users can print or save the report as needed.
 
 ### Model Assumptions
 The app surfaces the assumptions behind each projection, including maintenance calories, exercise burn, weight-change math, daily calorie balance, and energy-score drivers. Results remain directional wellness projections, not medical advice.
@@ -145,13 +156,33 @@ The system is fully modular. The simulation engine has zero dependencies on the 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/input` | Submit daily habit data (calories, maintenance calories, sleep, exercise, water, weight) |
-| `POST` | `/api/simulate` | Run a projection for 7, 30, or 90 days against a saved input |
-| `POST` | `/api/scenarios/compare` | Run 2-4 labeled scenarios and compare projected outcomes |
+| `POST` | `/api/simulate` | Run a projection for 7, 14, 30, 90, 120, or 180 days against a saved input |
+| `POST` | `/api/scenarios/compare` | Run 2-5 labeled scenarios and compare projected outcomes |
 | `GET` | `/api/results/{id}` | Retrieve full simulation results with day-by-day predictions and summary |
 
 All responses include structured JSON with prediction arrays and computed summaries (final weight, average energy, net weight change).
 
 Full request/response schemas are documented in [`docs/API_SPEC.md`](docs/API_SPEC.md).
+
+---
+
+<a id="accessibility"></a>
+
+## Accessibility
+
+Digital Twin Lite includes Section 508-oriented accessibility practices, including semantic landmarks, keyboard focus states, labeled form controls, live status regions, reduced-motion support, and a skip link. The practical target is WCAG 2.2 AA alignment, but the project does not claim formal accessibility certification.
+
+See [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md) for details.
+
+---
+
+<a id="audit-readiness"></a>
+
+## Audit Readiness
+
+Digital Twin Lite documents its accessibility, testing, licensing, privacy, safety, and explainability posture to support future review by companies, universities, nonprofits, and public-sector teams. These notes are preparation materials, not legal, security, medical, or accessibility certifications.
+
+See [`docs/AUDIT_READINESS.md`](docs/AUDIT_READINESS.md) for the checklist and evidence map.
 
 ---
 
@@ -279,7 +310,7 @@ cd backend
 python -m pytest tests/ -v
 ```
 
-31 tests covering engine logic, API endpoints, input validation, edge cases, scenario comparison, explanations, and all simulation periods.
+32 backend tests and 3 frontend tests covering engine logic, API endpoints, input validation, edge cases, scenario comparison, custom scenarios, explanations, input cautions, form behavior, and all simulation periods.
 
 ---
 
@@ -320,13 +351,16 @@ digital-twin-lite/
 │   ├── MVP_SCOPE.md                # Feature scope and boundaries
 │   ├── USER_STORIES.md             # User stories
 │   ├── ARCHITECTURE.md             # System architecture
+│   ├── ACCESSIBILITY.md            # Accessibility practices and target standards
+│   ├── AUDIT_READINESS.md          # Audit-readiness checklist and evidence map
 │   ├── DOMAIN_MODEL.md             # Data model specification
 │   ├── API_SPEC.md                 # Full API documentation
 │   ├── DISCLAIMERS.md              # Legal disclaimers
 │   └── THIRD_PARTY_NOTICES.md      # Dependency license audit
 ├── setup.sh                        # Setup script (Linux/macOS)
 ├── setup.ps1                       # Setup script (Windows)
-├── LICENSE                         # MIT
+├── LICENSE                         # Apache-2.0
+├── NOTICE                          # Attribution notice
 └── .gitignore
 ```
 
@@ -358,5 +392,7 @@ See [`docs/DISCLAIMERS.md`](docs/DISCLAIMERS.md) for full legal text.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache License 2.0 — see [LICENSE](LICENSE).
+
+Copyright 2026 Sekacorn. Attribution notices are provided in [NOTICE](NOTICE).
 

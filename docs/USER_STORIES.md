@@ -7,7 +7,7 @@
 - As a user, I want to enter my water intake so the system can factor hydration into my energy score.
 
 ## Simulation
-- As a user, I want to choose a simulation period (7, 30, or 90 days) so I can see short and long term projections.
+- As a user, I want to choose a simulation period from 7 to 180 days so I can see short and longer term projections.
 - As a user, I want to run a simulation with my inputs so I can see predicted outcomes.
 
 ## Results
